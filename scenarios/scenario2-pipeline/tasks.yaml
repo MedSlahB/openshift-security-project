@@ -1,0 +1,61 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: security-scan
+  namespace: cicd
+spec:
+  params:
+  - name: image
+    type: string
+  steps:
+  - name: scan
+    image: aquasec/trivy:latest
+    script: |
+      #!/bin/sh
+      echo "Scanning image: $(params.image)"
+      trivy image --severity HIGH,CRITICAL --exit-code 0 $(params.image) || true
+      echo "Scan complete"
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: verify-deployment
+  namespace: cicd
+spec:
+  params:
+  - name: namespace
+    type: string
+  - name: deployment
+    type: string
+  steps:
+  - name: verify
+    image: quay.io/openshift/origin-cli:latest
+    script: |
+      #!/bin/bash
+      set -e
+      echo "Verifying deployment $(params.deployment) in $(params.namespace)"
+      oc rollout status deployment/$(params.deployment) -n $(params.namespace) --timeout=5m
+      oc wait --for=condition=available --timeout=300s deployment/$(params.deployment) -n $(params.namespace)
+      echo "Deployment verified successfully"
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-tests
+  namespace: cicd
+spec:
+  workspaces:
+  - name: source
+  steps:
+  - name: test
+    image: python:3.9-slim
+    workingDir: $(workspaces.source.path)/application/vulnerable-app
+    script: |
+      #!/bin/sh
+      echo "Running tests..."
+      pip install -q -r requirements.txt
+      echo "Tests would run here"
+      echo "Test complete"

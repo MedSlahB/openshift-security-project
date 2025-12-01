@@ -1,0 +1,54 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: integration-test
+  namespace: security-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: python:3.9-slim
+        command:
+        - /bin/sh
+        - -c
+        - |
+          pip install requests
+          
+          cat > test.py <<'PYEOF'
+          import requests
+          import sys
+          
+          base_url = "http://vulnerable-app:8080"
+          
+          def test_health():
+              r = requests.get(f"{base_url}/health")
+              assert r.status_code == 200
+              print("✓ Health check passed")
+          
+          def test_home():
+              r = requests.get(base_url)
+              assert r.status_code == 200
+              print("✓ Home page passed")
+          
+          def test_metrics():
+              r = requests.get(f"{base_url}/metrics")
+              assert r.status_code == 200
+              print("✓ Metrics passed")
+          
+          if __name__ == "__main__":
+              try:
+                  test_health()
+                  test_home()
+                  test_metrics()
+                  print("All integration tests passed!")
+                  sys.exit(0)
+              except Exception as e:
+                  print(f"Test failed: {e}")
+                  sys.exit(1)
+          PYEOF
+          
+          python test.py
+      restartPolicy: Never
+  backoffLimit: 3

@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm
+  namespace: security-tools
+data:
+  realm.json: |
+    {
+      "realm": "security-demo",
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "loginWithEmailAllowed": true,
+      "roles": {
+        "realm": [
+          {"name": "developer"},
+          {"name": "operator"},
+          {"name": "security-auditor"}
+        ]
+      },
+      "users": [
+        {
+          "username": "developer",
+          "enabled": true,
+          "email": "developer@example.com",
+          "credentials": [{"type": "password", "value": "developer123"}],
+          "realmRoles": ["developer"]
+        },
+        {
+          "username": "operator",
+          "enabled": true,
+          "email": "operator@example.com",
+          "credentials": [{"type": "password", "value": "operator123"}],
+          "realmRoles": ["operator"]
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "openshift",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "redirectUris": ["https://oauth-openshift.apps.cluster.local/*"],
+          "webOrigins": ["+"]
+        }
+      ]
+    }

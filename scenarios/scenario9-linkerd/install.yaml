@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linkerd-config
+  namespace: security-demo
+data:
+  instructions.txt: |
+    To enable service mesh injection:
+    
+    1. Label the namespace:
+       oc label namespace security-demo linkerd.io/inject=enabled
+    
+    2. Restart deployment:
+       oc rollout restart deployment vulnerable-app -n security-demo
+    
+    3. Verify injection:
+       oc get pods -n security-demo -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].name}{"\n"}{end}'
+    
+    4. To remove:
+       oc label namespace security-demo linkerd.io/inject-
+       oc rollout restart deployment vulnerable-app -n security-demo

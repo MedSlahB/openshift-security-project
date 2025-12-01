@@ -1,0 +1,125 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnerable-app
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnerable-app
+  template:
+    metadata:
+      labels:
+        app: vulnerable-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: vulnerable-app
+        image: image-registry.openshift-image-registry.svc:5000/security-demo/vulnerable-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vulnerable-app
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: vulnerable-app
+
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: vulnerable-app
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+spec:
+  to:
+    kind: Service
+    name: vulnerable-app
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: vulnerable-app
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: vulnerable-app
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+spec:
+  source:
+    type: Binary
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  output:
+    to:
+      kind: ImageStreamTag
+      name: vulnerable-app:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

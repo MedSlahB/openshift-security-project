@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linkerd-instructions
+  namespace: security-demo
+data:
+  setup.md: |
+    # Linkerd Setup Instructions
+    
+    ## Enable Service Mesh
+    
+    1. Label namespace for injection:
+```
+    oc label namespace security-demo linkerd.io/inject=enabled
+```
+    
+    2. Restart deployment:
+```
+    oc rollout restart deployment vulnerable-app -n security-demo
+```
+    
+    3. Verify injection:
+```
+    oc get pods -n security-demo
+```
+    
+    Each pod should have 2 containers (app + linkerd-proxy)
+    
+    4. Check mesh status:
+```
+    oc get pods -n security-demo -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].name}{"\n"}{end}'
+```
+    
+    ## mTLS Configuration
+    
+    Service mesh automatically enables mTLS between pods.
+    
+    ## Cleanup
+    
+    1. Remove label:
+```
+    oc label namespace security-demo linkerd.io/inject-
+```
+    
+    2. Restart to remove sidecars:
+```
+    oc rollout restart deployment vulnerable-app -n security-demo
+```

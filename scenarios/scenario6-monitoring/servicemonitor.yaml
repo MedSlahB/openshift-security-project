@@ -1,0 +1,47 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vulnerable-app-monitor
+  namespace: security-demo
+  labels:
+    app: vulnerable-app
+spec:
+  selector:
+    matchLabels:
+      app: vulnerable-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vulnerable-app-alerts
+  namespace: security-demo
+spec:
+  groups:
+  - name: vulnerable-app.rules
+    interval: 30s
+    rules:
+    - alert: VulnerableAppDown
+      expr: up{job="vulnerable-app"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Vulnerable App is down"
+        description: "App has been down for 5 minutes"
+    
+    - alert: HighMemoryUsage
+      expr: |
+        container_memory_usage_bytes{namespace="security-demo",pod=~"vulnerable-app.*"} 
+        / container_spec_memory_limit_bytes{namespace="security-demo",pod=~"vulnerable-app.*"} > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage"
+        description: "Pod memory usage above 90%"

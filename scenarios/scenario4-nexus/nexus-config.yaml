@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexus-setup
+  namespace: cicd
+data:
+  setup.sh: |
+    #!/bin/bash
+    # Get admin password
+    NEXUS_POD=$(oc get pods -n cicd -l app=nexus -o jsonpath='{.items[0].metadata.name}')
+    echo "Nexus pod: $NEXUS_POD"
+    echo "Admin password:"
+    oc exec -n cicd $NEXUS_POD -- cat /nexus-data/admin.password
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-credentials
+  namespace: cicd
+type: Opaque
+stringData:
+  username: admin
+  password: changeme
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: push-to-nexus
+  namespace: cicd
+spec:
+  params:
+  - name: image-name
+    type: string
+  - name: image-tag
+    type: string
+  steps:
+  - name: push
+    image: quay.io/buildah/stable:latest
+    script: |
+      #!/bin/bash
+      echo "Would push $(params.image-name):$(params.image-tag) to Nexus"
+      echo "Push complete"

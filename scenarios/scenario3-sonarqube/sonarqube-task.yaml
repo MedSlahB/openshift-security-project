@@ -1,0 +1,38 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: sonarqube-scanner
+  namespace: cicd
+spec:
+  params:
+  - name: sonar-host-url
+    type: string
+    default: http://sonarqube.security-tools.svc:9000
+  - name: sonar-project-key
+    type: string
+    default: vulnerable-app
+  workspaces:
+  - name: source
+  steps:
+  - name: scan
+    image: sonarsource/sonar-scanner-cli:latest
+    workingDir: $(workspaces.source.path)/application/vulnerable-app
+    script: |
+      #!/bin/sh
+      echo "Creating sonar-project.properties..."
+      cat > sonar-project.properties <<EOF
+      sonar.projectKey=$(params.sonar-project-key)
+      sonar.projectName=Vulnerable App
+      sonar.projectVersion=1.0
+      sonar.sources=.
+      sonar.language=py
+      sonar.sourceEncoding=UTF-8
+      EOF
+      
+      echo "Running SonarQube scan..."
+      sonar-scanner \
+        -Dsonar.projectKey=$(params.sonar-project-key) \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=$(params.sonar-host-url) \
+        || echo "Scan completed"

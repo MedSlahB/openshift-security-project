@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: security-demo
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus-operated:9090
+      isDefault: true
+      jsonData:
+        timeInterval: 30s
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: security-demo
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Vulnerable App Dashboard",
+        "panels": [
+          {
+            "id": 1,
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [{
+              "expr": "rate(container_cpu_usage_seconds_total{namespace=\"security-demo\"}[5m])"
+            }]
+          },
+          {
+            "id": 2,
+            "title": "Memory Usage",
+            "type": "graph",
+            "targets": [{
+              "expr": "container_memory_usage_bytes{namespace=\"security-demo\"}"
+            }]
+          }
+        ]
+      }
+    }

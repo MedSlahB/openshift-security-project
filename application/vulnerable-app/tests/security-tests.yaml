@@ -1,0 +1,33 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: security-test
+  namespace: security-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: test
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Testing application security..."
+          
+          # Test health endpoint
+          echo "Testing /health endpoint..."
+          curl -f http://vulnerable-app:8080/health || exit 1
+          
+          # Test SQL injection (should work - vulnerability test)
+          echo "Testing SQL injection vulnerability..."
+          curl -f "http://vulnerable-app:8080/search?username=admin" || exit 1
+          
+          # Test metrics endpoint
+          echo "Testing /metrics endpoint..."
+          curl -f http://vulnerable-app:8080/metrics || exit 1
+          
+          echo "All tests passed"
+      restartPolicy: Never
+  backoffLimit: 3

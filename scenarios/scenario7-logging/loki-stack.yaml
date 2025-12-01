@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: security-demo
+data:
+  loki.yaml: |
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+    ingester:
+      lifecycler:
+        address: 127.0.0.1
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+    schema_config:
+      configs:
+      - from: 2020-05-15
+        store: boltdb
+        object_store: filesystem
+        schema: v11
+        index:
+          prefix: index_
+          period: 24h
+    storage_config:
+      boltdb:
+        directory: /loki/index
+      filesystem:
+        directory: /loki/chunks
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: security-demo
+  labels:
+    app: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+      - name: loki
+        image: grafana/loki:2.9.0
+        args:
+        - -config.file=/etc/loki/loki.yaml
+        ports:
+        - containerPort: 3100
+          name: http
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki
+      volumes:
+      - name: config
+        configMap:
+          name: loki-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: security-demo
+  labels:
+    app: loki
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3100
+    targetPort: 3100
+    name: http
+  selector:
+    app: loki
