@@ -32,23 +32,25 @@ spec:
           value: "1"
         resources:
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 50m
+            memory: 64Mi
           limits:
-            cpu: 500m
-            memory: 512Mi
+            cpu: 200m
+            memory: 256Mi
         livenessProbe:
           httpGet:
             path: /health
             port: 8080
           initialDelaySeconds: 10
-          periodSeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /health
             port: 8080
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -119,7 +121,7 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 128Mi
     limits:
       cpu: 500m
       memory: 512Mi

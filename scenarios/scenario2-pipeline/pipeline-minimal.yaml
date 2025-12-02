@@ -1,70 +1,52 @@
----
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: build-and-deploy
+  name: build-and-deploy-minimal
   namespace: cicd
 spec:
   params:
-  - name: git-url
-    type: string
-    default: https://github.com/MedSlahB/openshift-security-project.git
-  - name: git-revision
-    type: string
-    default: main
   - name: image-name
     type: string
     default: vulnerable-app
+
   - name: namespace
     type: string
     default: security-demo
-  
+
   workspaces:
   - name: shared-workspace
-  
+
   tasks:
-  - name: fetch-repository
-    taskRef:
-      name: git-clone
-      kind: ClusterTask
-    params:
-    - name: url
-      value: $(params.git-url)
-    - name: revision
-      value: $(params.git-revision)
-    - name: deleteExisting
-      value: "true"
-    workspaces:
-    - name: output
-      workspace: shared-workspace
-  
   - name: build-image
     taskRef:
       name: buildah
       kind: ClusterTask
+      apiVersion: tekton.dev/v1
     params:
     - name: IMAGE
       value: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name):latest
     - name: TLSVERIFY
       value: "false"
     - name: CONTEXT
-      value: application/vulnerable-app
+      value: .
     workspaces:
     - name: source
       workspace: shared-workspace
-    runAfter:
-    - fetch-repository
-  
+
   - name: deploy
+    runAfter:
+    - build-image
     taskRef:
       name: openshift-client
       kind: ClusterTask
+      apiVersion: tekton.dev/v1
     params:
     - name: SCRIPT
       value: |
         oc set image deployment/$(params.image-name) \
           $(params.image-name)=image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name):latest \
           -n $(params.namespace)
-        oc rollout status deployment/$(params.image-name) -n $(params.namespace)
-    runAfter:
-    - build-image
+
+        oc rollout status deployment/$(params.image-name) \
+          -n $(params.namespace) --timeout=3m
+

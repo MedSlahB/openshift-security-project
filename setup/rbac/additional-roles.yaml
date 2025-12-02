@@ -65,3 +65,52 @@ subjects:
 - kind: ServiceAccount
   name: gitops-sa
   namespace: openshift-gitops
+  
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tekton-triggers-viewer
+  namespace: cicd
+rules:
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "interceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: view-tekton-triggers-to-pipeline-sa
+  namespace: cicd
+subjects:
+- kind: ServiceAccount
+  name: pipeline-sa
+  namespace: cicd
+roleRef:
+  kind: Role
+  name: tekton-triggers-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-cluster-interceptors-viewer
+rules:
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["clusterinterceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: view-cluster-interceptors-to-pipeline-sa
+subjects:
+- kind: ServiceAccount
+  name: pipeline-sa
+  namespace: cicd
+roleRef:
+  kind: ClusterRole
+  name: tekton-cluster-interceptors-viewer
+  apiGroup: rbac.authorization.k8s.io
+
+ 
