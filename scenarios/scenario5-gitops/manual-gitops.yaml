@@ -1,0 +1,72 @@
+---
+# MANUAL GitOps - Without Operator (Lightweight)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-application-controller
+  namespace: argocd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argocd-server
+  template:
+    metadata:
+      labels:
+        app: argocd-server
+    spec:
+      serviceAccountName: argocd-application-controller
+      containers:
+      - name: argocd-server
+        image: quay.io/argoproj/argocd:v2.8.0
+        command: [argocd-server]
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: argocd-server
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  to:
+    kind: Service
+    name: argocd-server
+  tls:
+    termination: edge
