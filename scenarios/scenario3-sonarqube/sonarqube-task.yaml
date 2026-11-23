@@ -20,6 +20,7 @@ spec:
     workingDir: $(workspaces.source.path)/application/vulnerable-app
     script: |
       #!/bin/sh
+      set -eu
       echo "Creating sonar-project.properties..."
       cat > sonar-project.properties <<EOF
       sonar.projectKey=$(params.sonar-project-key)
@@ -35,4 +36,4 @@ spec:
         -Dsonar.projectKey=$(params.sonar-project-key) \
         -Dsonar.sources=. \
         -Dsonar.host.url=$(params.sonar-host-url) \
-        || echo "Scan completed"
+
