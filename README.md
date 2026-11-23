@@ -101,6 +101,12 @@ The deployment script builds the application from the local source using the Ope
 
 Because this is an intentionally vulnerable workload, keep it inside an isolated local lab. Do not configure public DNS, external ingress, or production data for it.
 
+## Keycloak lab setup
+
+The Keycloak deployment expects two Secrets to exist in the `security-tools` namespace. Follow [Security and configuration notes](docs/SECURITY.md) to create local database and admin credentials before applying `scenarios/scenario8-keycloak/deployment.yaml`.
+
+The realm file contains demo identities without committed passwords. Set credentials through the Keycloak administration interface after importing the realm.
+
 ## Tests
 
 The repository includes basic HTTP checks in `application/vulnerable-app/tests/integration-tests.yaml` and security-lab checks in `application/vulnerable-app/tests/security-tests.yaml`.
