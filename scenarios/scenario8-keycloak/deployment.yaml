@@ -12,14 +12,6 @@ spec:
       storage: 2Gi
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-db-secret
-  namespace: security-tools
-type: Opaque
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
