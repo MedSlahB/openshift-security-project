@@ -13,8 +13,9 @@ spec:
     image: aquasec/trivy:latest
     script: |
       #!/bin/sh
+      set -eu
       echo "Scanning image: $(params.image)"
-      trivy image --severity HIGH,CRITICAL --exit-code 1 $(params.image)
+      trivy image --severity HIGH,CRITICAL --exit-code 1 "$(params.image)"
       echo "Scan completed with the configured severity threshold"
 
 ---
@@ -55,7 +56,6 @@ spec:
     workingDir: $(workspaces.source.path)/application/vulnerable-app
     script: |
       #!/bin/sh
-      echo "Running tests..."
-      pip install -q -r requirements.txt
-      echo "Tests would run here"
-      echo "Test complete"
+      set -eu
+      python -m pip install --disable-pip-version-check -q -r requirements.txt
+      python -m unittest discover -s tests -p 'test_*.py' -v
