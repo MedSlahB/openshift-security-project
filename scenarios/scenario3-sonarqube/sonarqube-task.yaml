@@ -18,12 +18,6 @@ spec:
   - name: scan
     image: sonarsource/sonar-scanner-cli:latest
     workingDir: $(workspaces.source.path)/application/vulnerable-app
-    env:
-    - name: SONAR_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: sonarqube-token
-          key: token
     script: |
       #!/bin/sh
       set -eu
