@@ -9,8 +9,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/yourusername/openshift-security-project.git
-    targetRevision: main
+    repoURL: https://github.com/MedSlahB/openshift-security-project.git
+    targetRevision: master
     path: application/vulnerable-app
   destination:
     server: https://kubernetes.default.svc

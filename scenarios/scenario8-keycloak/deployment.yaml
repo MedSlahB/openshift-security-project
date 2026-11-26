@@ -12,18 +12,6 @@ spec:
       storage: 2Gi
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-db-secret
-  namespace: security-tools
-type: Opaque
-stringData:
-  username: keycloak
-  password: keycloak123
-  database: keycloak
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,9 +38,15 @@ spec:
         - name: POSTGRES_DB
           value: keycloak
         - name: POSTGRES_USER
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-db-secret
+              key: username
         - name: POSTGRES_PASSWORD
-          value: keycloak123
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-db-secret
+              key: password
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         resources:
@@ -116,17 +110,29 @@ spec:
           name: http
         env:
         - name: KEYCLOAK_ADMIN
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-admin-secret
+              key: username
         - name: KEYCLOAK_ADMIN_PASSWORD
-          value: admin123
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-admin-secret
+              key: password
         - name: KC_DB
           value: postgres
         - name: KC_DB_URL
           value: jdbc:postgresql://keycloak-db:5432/keycloak
         - name: KC_DB_USERNAME
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-db-secret
+              key: username
         - name: KC_DB_PASSWORD
-          value: keycloak123
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-db-secret
+              key: password
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_HOSTNAME_STRICT_HTTPS

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Local application data
+*.db
+*.sqlite
+*.sqlite3
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+kubeconfig
+.kube/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

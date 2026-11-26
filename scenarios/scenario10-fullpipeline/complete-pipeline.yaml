@@ -8,10 +8,10 @@ spec:
   params:
   - name: git-url
     type: string
-    default: https://github.com/yourusername/openshift-security-project.git
+    default: https://github.com/MedSlahB/openshift-security-project.git
   - name: git-revision
     type: string
-    default: main
+    default: master
   - name: image-name
     type: string
     default: vulnerable-app
@@ -46,7 +46,7 @@ spec:
     - name: IMAGE
       value: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name):$(params.git-revision)
     - name: TLSVERIFY
-      value: "false"
+      value: "true"
     - name: CONTEXT
       value: application/vulnerable-app
     workspaces:

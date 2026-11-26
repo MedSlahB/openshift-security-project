@@ -24,14 +24,12 @@ data:
           "username": "developer",
           "enabled": true,
           "email": "developer@example.com",
-          "credentials": [{"type": "password", "value": "developer123"}],
           "realmRoles": ["developer"]
         },
         {
           "username": "operator",
           "enabled": true,
           "email": "operator@example.com",
-          "credentials": [{"type": "password", "value": "operator123"}],
           "realmRoles": ["operator"]
         }
       ],
