@@ -18,6 +18,12 @@ spec:
   - name: scan
     image: sonarsource/sonar-scanner-cli:latest
     workingDir: $(workspaces.source.path)/application/vulnerable-app
+    env:
+    - name: SONAR_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: sonarqube-token
+          key: token
     script: |
       #!/bin/sh
       set -eu
@@ -27,13 +33,11 @@ spec:
       sonar.projectName=Vulnerable App
       sonar.projectVersion=1.0
       sonar.sources=.
-      sonar.language=py
       sonar.sourceEncoding=UTF-8
       EOF
-      
+
       echo "Running SonarQube scan..."
       sonar-scanner \
-        -Dsonar.projectKey=$(params.sonar-project-key) \
+        -Dsonar.projectKey="$(params.sonar-project-key)" \
         -Dsonar.sources=. \
-        -Dsonar.host.url=$(params.sonar-host-url) \
-
+        -Dsonar.host.url="$(params.sonar-host-url)"
