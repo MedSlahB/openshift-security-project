@@ -38,7 +38,7 @@ The diagram describes the intended relationships between repository components; 
 | Path | Purpose |
 |---|---|
 | `application/vulnerable-app/` | Deliberately vulnerable Flask test application, image build and deployment resources |
-| `application/vulnerable-app/tests/` | Basic HTTP integration checks and security-lab checks |
+| `application/vulnerable-app/tests/` | Local Python smoke tests plus Kubernetes Job-based HTTP/security checks |
 | `scenarios/scenario1-rbac/` | Namespace roles, role bindings and NetworkPolicies |
 | `scenarios/scenario2-pipeline/` | Tekton tasks, pipeline and trigger examples |
 | `scenarios/scenario3-sonarqube/` | SonarQube deployment and scanner task example |
@@ -109,18 +109,26 @@ The realm file contains demo identities without committed passwords. Set credent
 
 ## Tests
 
-The repository includes basic HTTP checks in `application/vulnerable-app/tests/integration-tests.yaml` and security-lab checks in `application/vulnerable-app/tests/security-tests.yaml`.
+The repository currently contains three separate test mechanisms. They serve different purposes and should not be treated as interchangeable:
 
-Apply and inspect them only after the application is running:
+1. **Local Python smoke tests** — `application/vulnerable-app/tests/test_app.py` uses Flask's test client to check the `/health`, `/`, `/metrics` and `/search` routes. Run from `application/vulnerable-app/` in an environment with the application's Python dependencies installed:
 
-```bash
-oc apply -f application/vulnerable-app/tests/integration-tests.yaml
-oc logs job/integration-test -n security-demo
-```
+   ```bash
+   python -m unittest discover -s tests -p 'test_*.py' -v
+   ```
 
-The security test job exercises the deliberately vulnerable test application. It is not a security certification or a substitute for a proper application security test suite.
+2. **Deployed-app integration checks** — `application/vulnerable-app/tests/integration-tests.yaml` creates a Kubernetes Job that sends HTTP requests to the `vulnerable-app` Service. Apply it only after the application is deployed:
 
-Tekton task and pipeline manifests are examples, not a guarantee of a fully automated, passing CI/CD workflow. Confirm that referenced ClusterTasks, Tekton API versions, credentials, workspaces and image registry permissions exist in your cluster before running them.
+   ```bash
+   oc apply -f application/vulnerable-app/tests/integration-tests.yaml
+   oc logs job/integration-test -n security-demo
+   ```
+
+3. **Security-lab behavior checks** — `application/vulnerable-app/tests/security-tests.yaml` creates a Job that checks selected endpoints, including an intentionally vulnerable search route. These checks demonstrate lab behavior; they do not establish that the application is secure.
+
+The Python tests have been added to the repository, but their execution result must be verified in a suitable environment. The presence of test files or Job manifests is not evidence that tests have passed.
+
+Tekton task and pipeline manifests are examples, not proof of a fully automated, passing CI/CD workflow. Confirm that referenced ClusterTasks, Tekton API versions, credentials, workspaces and image registry permissions exist in your cluster before running them.
 
 ## Security notes
 
