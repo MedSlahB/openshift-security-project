@@ -46,7 +46,7 @@ spec:
     - name: IMAGE
       value: image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image-name):$(params.git-revision)
     - name: TLSVERIFY
-      value: "false"
+      value: "true"
     - name: CONTEXT
       value: application/vulnerable-app
     workspaces:
